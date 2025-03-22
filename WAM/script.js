@@ -18,8 +18,19 @@ function startGame() {
     });
 
     document.querySelectorAll(".hole").forEach(hole => {
-        hole.addEventListener("click", handleMiss);
-        hole.addEventListener("touchstart", handleMiss);
+        hole.addEventListener("click", function(event) {
+            // Hanya panggil handleMiss jika klik langsung pada hole, bukan pada mole
+            if (event.target === this) {
+                handleMiss(event);
+            }
+        });
+        
+        hole.addEventListener("touchstart", function(event) {
+            // Hanya panggil handleMiss jika touch langsung pada hole, bukan pada mole
+            if (event.target === this) {
+                handleMiss(event);
+            }
+        });
     });
 
     clearInterval(gameInterval);
@@ -27,11 +38,9 @@ function startGame() {
 }
 
 function handleMiss(event) {
-    if (!event.target.classList.contains("mole")) {
-        mistakes++;
-        if (mistakes >= maxMistakes) {
-            triggerJumpscare();
-        }
+    mistakes++;
+    if (mistakes >= maxMistakes) {
+        triggerJumpscare();
     }
 }
 
@@ -51,7 +60,10 @@ function spawnMole() {
     currentMole.addEventListener("touchstart", handleHit);
 }
 
-function handleHit() {
+function handleHit(event) {
+    // Hentikan event agar tidak mem-bubble up ke hole induk
+    event.stopPropagation();
+    
     score++;
     document.getElementById("score").textContent = score;
     currentMole.remove();
