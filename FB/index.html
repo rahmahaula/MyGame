@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird Sederhana</title>
+    <style>
+        * { margin: 0; padding: 0; }
+        canvas { background: skyblue; display: block; margin: auto; touch-action: manipulation; }
+        @media (max-width: 768px) {
+            canvas {
+                width: 100vw;
+                height: 80vh;
+                display: block;
+                margin: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="500"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let bird, pipes, score, gameStarted, gameOver, readyToRestart;
+
+        function initGame() {
+            bird = { x: 50, y: 200, radius: 15, velocity: 0, gravity: 0.1, lift: -3.5 };
+            pipes = [];
+            score = 0;
+            gameStarted = false;
+            gameOver = false;
+            readyToRestart = false;
+        }
+
+        function drawBird() {
+            ctx.fillStyle = "yellow";
+            ctx.beginPath();
+            ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function drawPipes() {
+            ctx.fillStyle = "green";
+            pipes.forEach(pipe => {
+                ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
+                ctx.fillRect(pipe.x, pipe.bottom, pipe.width, canvas.height - pipe.bottom);
+            });
+        }
+
+        function updateGame() {
+            if (!gameStarted || gameOver) return;
+
+            bird.velocity += bird.gravity;
+            bird.velocity *= 0.94;
+            bird.y += bird.velocity;
+
+            if (bird.y + bird.radius >= canvas.height || bird.y - bird.radius <= 0) {
+                endGame();
+            }
+
+            pipes.forEach(pipe => {
+                pipe.x -= 2;
+                if (pipe.x + pipe.width < 0) {
+                    pipes.shift();
+                    score++;
+                }
+                if (bird.x + bird.radius > pipe.x && bird.x - bird.radius < pipe.x + pipe.width &&
+                    (bird.y - bird.radius < pipe.top || bird.y + bird.radius > pipe.bottom)) {
+                    endGame();
+                }
+            });
+
+            if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 150) {
+                let topHeight = Math.random() * (canvas.height / 2);
+                let gap = 120;
+                pipes.push({ x: canvas.width, width: 50, top: topHeight, bottom: topHeight + gap });
+            }
+        }
+
+        function endGame() {
+            gameOver = true;
+            let restart = confirm("Game Over! Score: " + score + "\nTap the screen to restart the game.");
+            if (restart) {
+                readyToRestart = true;
+            }
+        }
+
+        function restartGame() {
+            initGame();
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBird();
+            drawPipes();
+            updateGame();
+            ctx.fillStyle = "black";
+            ctx.font = "20px Arial";
+            ctx.fillText("Score: " + score, 10, 20);
+            if (!gameOver) requestAnimationFrame(gameLoop);
+        }
+
+        function jump() {
+            if (!gameStarted) {
+                gameStarted = true;
+                gameLoop();
+            }
+            if (readyToRestart) {
+                restartGame();
+                gameStarted = true;
+                gameLoop();
+            }
+            bird.velocity = bird.lift;
+        }
+
+        document.addEventListener("keydown", function(event) {
+            if (event.code === "Space") {
+                jump();
+            }
+        });
+
+        document.addEventListener("touchstart", function() {
+            jump();
+        });
+
+        initGame();
+    </script>
+</body>
+</html>

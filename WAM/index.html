@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whack-a-Mole</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container text-center mt-4">
+        <h1 class="mb-4">Whack the Mole!</h1>
+        <h3>Score: <span id="score">0</span></h3>
+        <h3 class="text-success mt-3" id="you-win" style="display: none;">YOU WIN!</h3>
+        <h3 class="text-danger mt-3" id="game-over" style="display: none;">GAME OVER</h3>
+        <div id="jumpscare" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; justify-content:center; align-items:center;">
+            <img src="jumpscare.webp" alt="Scary Image" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+        
+        
+        <button class="btn btn-primary my-3" onclick="startGame()">Start the Game</button>
+        <div class="game-board">
+            <div class="hole" id="hole1"></div>
+            <div class="hole" id="hole2"></div>
+            <div class="hole" id="hole3"></div>
+            <div class="hole" id="hole4"></div>
+            <div class="hole" id="hole5"></div>
+            <div class="hole" id="hole6"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

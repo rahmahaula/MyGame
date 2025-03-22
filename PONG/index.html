@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PONG VERTIKAL - Mobile & PC</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { text-align: center; font-family: Arial, sans-serif; color: white; }
+        canvas { display: block; margin: 20px auto; background: black; touch-action: none; }
+        h1 { margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>🎾 PONG VERTIKAL - Mobile & PC 🎾</h1>
+    <canvas id="pongCanvas" width="400" height="600"></canvas>
+    <p>Tekan SPACE atau sentuh layar untuk memulai</p>
+
+    <script>
+        const canvas = document.getElementById("pongCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const paddleHeight = 10, paddleWidth = 80;
+        let playerX = canvas.width / 2 - paddleWidth / 2;
+        let score = 0;
+        let ballX, ballY, ballSpeedX, ballSpeedY;
+        let gameRunning = false;
+        let keys = {};
+
+        function drawRect(x, y, width, height, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, width, height);
+        }
+
+        function drawBall(x, y, radius, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawText(text, x, y, size, color) {
+            ctx.fillStyle = color;
+            ctx.font = `${size}px Arial`;
+            ctx.fillText(text, x, y);
+        }
+
+        function updateGame() {
+            if (!gameRunning) return;
+
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // Pantulan dinding kiri & kanan
+            if (ballX <= 0 || ballX >= canvas.width) {
+                ballSpeedX *= -1;
+            }
+
+            // Pantulan atap
+            if (ballY <= 0) {
+                ballSpeedY = Math.abs(ballSpeedY); // Memastikan bola selalu jatuh ke bawah setelah memantul dari atap
+            }
+
+            // Pantulan paddle pemain
+            if (ballY >= canvas.height - paddleHeight - 10 && 
+                ballX >= playerX && ballX <= playerX + paddleWidth) {
+                ballSpeedY *= -1.1; // Meningkatkan akselerasi vertikal lebih besar
+                ballSpeedX = (ballX - (playerX + paddleWidth/2)) / 3.5; // Meningkatkan efek sudut pantulan
+                score++;
+            }
+
+            // Game Over jika bola melewati paddle
+            if (ballY >= canvas.height) {
+                alert(`Game Over! Skor Anda: ${score}. Tekan SPACE atau sentuh untuk bermain lagi.`);
+                resetGame();
+            }
+
+            // Kontrol keyboard (PC)
+            if (keys["ArrowLeft"] || keys["a"]) {
+                playerX -= 8; // Meningkatkan kecepatan paddle
+            }
+            if (keys["ArrowRight"] || keys["d"]) {
+                playerX += 8; // Meningkatkan kecepatan paddle
+            }
+
+            // Batas paddle agar tidak keluar area
+            playerX = Math.max(0, Math.min(canvas.width - paddleWidth, playerX));
+        }
+
+        function resetBall() {
+            ballX = canvas.width / 2;
+            ballY = canvas.height / 4;
+            ballSpeedX = 2.5; // Meningkatkan kecepatan horizontal awal
+            ballSpeedY = 6; // Meningkatkan kecepatan jatuh awal secara signifikan
+        }
+
+        function resetGame() {
+            gameRunning = false;
+            score = 0;
+            playerX = canvas.width / 2 - paddleWidth / 2;
+            resetBall();
+        }
+
+        function drawGame() {
+            drawRect(0, 0, canvas.width, canvas.height, "black");
+            drawRect(playerX, canvas.height - paddleHeight - 10, paddleWidth, paddleHeight, "white");
+            drawBall(ballX, ballY, 10, "white");
+            drawText(`Skor: ${score}`, 20, 30, 20, "white");
+
+            if (!gameRunning) {
+                drawText("Tekan SPACE atau sentuh layar", canvas.width / 2 - 160, canvas.height / 2, 16, "yellow");
+            }
+        }
+
+        function gameLoop() {
+            updateGame();
+            drawGame();
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener("keydown", (event) => {
+            keys[event.key] = true;
+            if (event.key === " ") {
+                if (!gameRunning) {
+                    gameRunning = true;
+                    resetBall();
+                }
+            }
+        });
+
+        document.addEventListener("keyup", (event) => {
+            keys[event.key] = false;
+        });
+
+        // Kontrol sentuhan (HP)
+        canvas.addEventListener("touchmove", (event) => {
+            if (!gameRunning) {
+                gameRunning = true;
+                resetBall();
+            }
+            let touch = event.touches[0];
+            let rect = canvas.getBoundingClientRect();
+            let touchX = touch.clientX - rect.left;
+            playerX = touchX - paddleWidth / 2;
+        });
+
+        // Mencegah scroll pada perangkat mobile saat bermain
+        canvas.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            if (!gameRunning) {
+                gameRunning = true;
+                resetBall();
+            }
+        });
+
+        resetBall();
+        drawGame();
+        gameLoop();
+    </script>
+
+</body>
+</html>
