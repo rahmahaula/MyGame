@@ -13,40 +13,29 @@ function startGame() {
     document.getElementById("you-win").style.display = "none";
     document.getElementById("jumpscare").style.display = "none";
 
+    // Hapus semua event listener lama dengan cloneNode
     document.querySelectorAll(".hole").forEach(hole => {
         hole.replaceWith(hole.cloneNode(true));
     });
 
-    document.querySelectorAll(".hole").forEach(hole => {
-        hole.addEventListener("click", function(event) {
-            // Hanya panggil handleMiss jika klik langsung pada hole, bukan pada mole
-            if (event.target === this) {
-                handleMiss(event);
-            }
-        });
-        
-        hole.addEventListener("touchstart", function(event) {
-            // Hanya panggil handleMiss jika touch langsung pada hole, bukan pada mole
-            if (event.target === this) {
-                handleMiss(event);
-            }
-        });
-    });
+    // Tambahkan event listeners baru yang lebih jelas
+    // PERUBAHAN: Tidak lagi menambahkan event listener untuk miss di sini
+    // Kita akan hanya mendeteksi miss ketika waktu habis
 
     clearInterval(gameInterval);
     gameInterval = setInterval(spawnMole, 1000);
 }
 
-function handleMiss(event) {
-    mistakes++;
-    if (mistakes >= maxMistakes) {
-        triggerJumpscare();
-    }
-}
-
 function spawnMole() {
+    // Jika tidak mengklik mole sebelumnya, itu dihitung sebagai miss
     if (currentMole) {
         currentMole.remove();
+        // PERUBAHAN: Tambahkan miss karena mole sebelumnya tidak diklik
+        mistakes++;
+        if (mistakes >= maxMistakes) {
+            triggerJumpscare();
+            return;
+        }
     }
 
     let holes = document.querySelectorAll(".hole");
@@ -56,17 +45,32 @@ function spawnMole() {
     currentMole.classList.add("mole");
     randomHole.appendChild(currentMole);
 
-    currentMole.addEventListener("click", handleHit);
-    currentMole.addEventListener("touchstart", handleHit);
+    // PERUBAHAN: Gunakan preventDefault untuk mencegah event bubble
+    currentMole.addEventListener("click", function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        handleHit();
+        return false;  // Tambahan untuk mencegah event default
+    });
+    
+    currentMole.addEventListener("touchstart", function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        handleHit();
+        return false;  // Tambahan untuk mencegah event default
+    });
 }
 
-function handleHit(event) {
-    // Hentikan event agar tidak mem-bubble up ke hole induk
-    event.stopPropagation();
-    
+function handleHit() {
     score++;
     document.getElementById("score").textContent = score;
-    currentMole.remove();
+    
+    // Set currentMole ke null daripada menghapusnya,
+    // ini menandakan bahwa mole sudah diklik dengan benar
+    let tempMole = currentMole;
+    currentMole = null;
+    tempMole.remove();
+    
     if (score >= maxScore) {
         youWin();
     }
